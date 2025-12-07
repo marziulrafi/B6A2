@@ -1,4 +1,7 @@
+
 import { pool } from "../../config/db"
+
+
 
 const createVehicle = async (payload: Record<string, undefined>) => {
     const {
@@ -18,27 +21,32 @@ const createVehicle = async (payload: Record<string, undefined>) => {
             availability_status,
         ]
     )
-
     return result
 }
 
 
-const getVehicle = async () => {
+
+const getVehicles = async () => {
     const result = await pool.query(`SELECT * FROM vehicles`)
     return result
 }
+
 
 
 const getSingleVehicle = async (vehicleId: string) => {
     const result = await pool.query(`SELECT * FROM vehicles WHERE id=$1`, [
         vehicleId,
     ])
-
     return result
 }
 
 
-const updateVehicle = async (vehicleId: string, payload: Record<string, undefined>) => {
+
+
+const updateVehicle = async (
+    vehicleId: string,
+    payload: Record<string, undefined>
+) => {
     const {
         vehicle_name,
         type,
@@ -54,10 +62,9 @@ const updateVehicle = async (vehicleId: string, payload: Record<string, undefine
             registration_number,
             daily_rent_price,
             availability_status,
-            vehicleId
+            vehicleId,
         ]
     )
-
     return result
 }
 
@@ -69,7 +76,7 @@ const deleteVehicle = async (vehicleId: string) => {
 }
 export const vehicleServices = {
     createVehicle,
-    getVehicle,
+    getVehicles,
     getSingleVehicle,
     updateVehicle,
     deleteVehicle

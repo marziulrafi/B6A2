@@ -2,33 +2,14 @@ import { Request, Response } from "express"
 import { userServices } from "./user.service"
 
 
-
-const createUser = async (req: Request, res: Response) => {
+const getUsers = async (req: Request, res: Response) => {
     try {
-        const result = await userServices.createUser(req.body)
-
-        res.status(201).json({
-            success: true,
-            message: "User added successfully",
-            data: result.rows[0],
-        })
-    } catch (err: any) {
-        res.status(404).json({
-            success: false,
-            message: err.message,
-        })
-    }
-}
-
-
-const getAllUsers = async (req: Request, res: Response) => {
-    try {
-        const result = await userServices.getAllUsers()
+        const result = await userServices.getUsers()
         res.status(200).json({
             success: true,
+            message: "Users retrieved successfully",
             data: result.rows,
         })
-
     } catch (err: any) {
         res.status(500).json({
             success: false,
@@ -36,6 +17,7 @@ const getAllUsers = async (req: Request, res: Response) => {
         })
     }
 }
+
 
 
 const getSingleUser = async (req: Request, res: Response) => {
@@ -71,6 +53,7 @@ const updateUser = async (req: Request, res: Response) => {
             paramsEmail as string,
             req.body
         )
+
         if (result.rows.length === 0) {
             res.status(404).json({
                 status: false,
@@ -92,11 +75,12 @@ const updateUser = async (req: Request, res: Response) => {
 }
 
 
+
 const deleteUser = async (req: Request, res: Response) => {
-    const paramsEmail = req.params.email
+    const userId = req.params.id
 
     try {
-        const result = await userServices.deleteUser(paramsEmail as string)
+        const result = await userServices.deleteUser(userId as string)
         if (result.rowCount === 0) {
             res.status(404).json({
                 status: false,
@@ -119,8 +103,7 @@ const deleteUser = async (req: Request, res: Response) => {
 
 
 export const userControllers = {
-    createUser,
-    getAllUsers,
+    getUsers,
     getSingleUser,
     updateUser,
     deleteUser

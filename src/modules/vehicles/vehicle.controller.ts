@@ -19,11 +19,12 @@ const createVehicle = async (req: Request, res: Response) => {
 
 
 
-const getVehicle = async (req: Request, res: Response) => {
+const getVehicles = async (req: Request, res: Response) => {
     try {
-        const result = await vehicleServices.getVehicle()
+        const result = await vehicleServices.getVehicles()
         res.status(201).json({
             success: true,
+            message: "Vehicles retrieved successfully",
             data: result.rows,
         })
     } catch (err: any) {
@@ -48,6 +49,7 @@ const getSingleVehicle = async (req: Request, res: Response) => {
         } else {
             res.status(200).json({
                 status: true,
+                message: "Vehicles retrieved successfully",
                 data: result.rows[0],
             })
         }
@@ -69,6 +71,7 @@ const updateVehicle = async (req: Request, res: Response) => {
             vehicleId as string,
             req.body
         )
+        
         if (result.rows.length === 0) {
             res.status(404).json({
                 status: false,
@@ -116,7 +119,7 @@ const deleteVehicle = async (req: Request, res: Response) => {
 }
 export const vehicleController = {
     createVehicle,
-    getVehicle,
+    getVehicles,
     getSingleVehicle,
     updateVehicle,
     deleteVehicle

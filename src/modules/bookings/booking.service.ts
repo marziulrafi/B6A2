@@ -1,0 +1,130 @@
+import { pool } from "../../config/db"
+
+const createBooking = async (payload: {
+  customer_id: number
+  vehicle_id: number
+  rent_start_date: string
+  rent_end_date: string
+}) => {
+  const { customer_id, vehicle_id, rent_start_date, rent_end_date } = payload
+
+  // 1️⃣ Get vehicle daily price and availability
+  const vehicleRes = await pool.query(
+    `SELECT daily_rent_price FROM vehicles WHERE id = $1 AND availability_status = 'available'`,
+    [vehicle_id]
+  )
+
+  if (vehicleRes.rows.length === 0) {
+    throw new Error("Vehicle not available")
+  }
+
+  const dailyPrice = vehicleRes.rows[0].daily_rent_price
+
+  // 2️⃣ Calculate total price using plain JS
+  const startDate = new Date(rent_start_date)
+  const endDate = new Date(rent_end_date)
+  const timeDiff = endDate.getTime() - startDate.getTime()
+
+  if (timeDiff < 0) {
+    throw new Error("rent_end_date must be after rent_start_date")
+  }
+
+  const days = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1
+  const total_price = dailyPrice * days
+
+  const status = "active"
+
+  // 3️⃣ Insert booking and return booking with vehicle info
+  const result = await pool.query(
+    `WITH inserted_booking AS (
+      INSERT INTO bookings (
+        customer_id, vehicle_id, rent_start_date, rent_end_date, total_price, status
+      ) VALUES ($1,$2,$3,$4,$5,$6)
+      RETURNING *
+    )
+    SELECT 
+      b.id,
+      b.customer_id,
+      b.vehicle_id,
+      b.rent_start_date,
+      b.rent_end_date,
+      b.total_price,
+      b.status,
+      json_build_object(
+        'vehicle_name', v.vehicle_name,
+        'daily_rent_price', v.daily_rent_price
+      ) AS vehicle
+    FROM inserted_booking b
+    JOIN vehicles v ON b.vehicle_id = v.id`,
+    [customer_id, vehicle_id, rent_start_date, rent_end_date, total_price, status]
+  )
+
+  // 4️⃣ Update vehicle status to booked
+  await pool.query(
+    `UPDATE vehicles SET availability_status = 'booked' WHERE id = $1`,
+    [vehicle_id]
+  )
+
+  return result
+}
+
+// Other methods can remain the same (getBookings, updateBookings, deleteBookings)
+
+const getBookings = async () => {
+  const result = await pool.query(`SELECT 
+      b.id,
+      b.customer_id,
+      b.vehicle_id,
+      b.rent_start_date,
+      b.rent_end_date,
+      b.total_price,
+      b.status,
+      json_build_object(
+        'vehicle_name', v.vehicle_name,
+        'daily_rent_price', v.daily_rent_price
+      ) AS vehicle
+    FROM bookings b
+    JOIN vehicles v ON b.vehicle_id = v.id`)
+  return result
+}
+
+const updateBookings = async (
+  payload: { status?: string },
+  bookingsId: string
+) => {
+  const { status } = payload
+  const bookingRes = await pool.query(
+    `SELECT vehicle_id FROM bookings WHERE id = $1`,
+    [bookingsId]
+  )
+  if (bookingRes.rows.length === 0) throw new Error("Booking not found")
+  const vehicleId = bookingRes.rows[0].vehicle_id
+
+  const result = await pool.query(
+    `UPDATE bookings SET status=$1 WHERE id=$2 RETURNING *`,
+    [status, bookingsId]
+  )
+
+  if (status === "returned" || status === "cancelled") {
+    await pool.query(
+      `UPDATE vehicles SET availability_status='available' WHERE id=$1`,
+      [vehicleId]
+    )
+  }
+
+  return result
+}
+
+const deleteBookings = async (bookingsId: string) => {
+  const result = await pool.query(`DELETE FROM bookings WHERE id=$1`, [
+    bookingsId,
+  ])
+  return result
+}
+
+export const bookingService = {
+  createBooking,
+  getBookings,
+  updateBookings,
+  deleteBookings
+}

@@ -1,29 +1,34 @@
 import express, { Request, Response } from "express"
-import initDB from "./config/db"
 import config from "./config"
+import initDB from "./config/db"
 import { userRoutes } from "./modules/users/user.routes"
-import { vehicleRouter } from "./modules/vehicles/vehicle.routes"
+import { vehicleRoutes } from "./modules/vehicles/vehicle.routes"
+import { bookingRoutes } from "./modules/bookings/booking.routes"
+import { signupRoutes } from "./modules/auth/signup/signup.routes"
+import { signinRoutes } from "./modules/auth/signin/signin.routes"
 
 
 const app = express()
-const port = config.port
-
 
 app.use(express.json())
 
+const port = config.port
+
 initDB()
 
-
-app.get('/', (req: Request, res: Response) => {
-    res.send('Vehicle Rental App running!')
+app.get("/", (req: Request, res: Response) => {
+    res.send("Vehicle Rental App is running!")
 })
 
 
-app.use("/v1/users", userRoutes)
-app.use("/v1/vehicles", vehicleRouter)
+app.use("/api/v1/users", userRoutes)
+app.use("/api/v1/vehicles", vehicleRoutes)
+app.use("/api/v1/bookings", bookingRoutes)
+app.use("/api/v1/auth", signupRoutes)
+app.use("/api/v1/auth", signinRoutes)
 
 
 
-app.listen(port, () => {
-    console.log(`Vehicle Rental app listening on port ${port}`)
+app.listen(config.port, () => {
+    console.log(`App listening on port ${port}`)
 })

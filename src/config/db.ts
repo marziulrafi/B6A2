@@ -2,11 +2,11 @@ import { Pool } from "pg"
 import config from "."
 
 export const pool = new Pool({
-    connectionString: `${config.connection_string}`,
+  connectionString: `${config.connection_string}`,
 })
 
 const initDB = async () => {
-    await pool.query(`
+  await pool.query(`
       CREATE TABLE IF NOT EXISTS Users(
       id SERIAL PRIMARY KEY,
       name VARCHAR(100) NOT NULL,
@@ -17,7 +17,7 @@ const initDB = async () => {
         CHECK (role IN ('admin', 'customer'))
       )`)
 
-    await pool.query(`
+  await pool.query(`
         CREATE TABLE IF NOT EXISTS Vehicles(
         id SERIAL PRIMARY KEY,
         vehicle_name VARCHAR(100) NOT NULL,
@@ -30,7 +30,7 @@ const initDB = async () => {
         CHECK(availability_status IN ('available','booked'))
         )`)
 
-    await pool.query(`
+  await pool.query(`
           CREATE TABLE IF NOT EXISTS Bookings(
           id SERIAL PRIMARY KEY,
           customer_id INT REFERENCES Users(id) ON DELETE CASCADE,
