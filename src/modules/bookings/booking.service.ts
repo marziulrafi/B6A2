@@ -8,7 +8,6 @@ const createBooking = async (payload: {
 }) => {
   const { customer_id, vehicle_id, rent_start_date, rent_end_date } = payload
 
-  // 1️⃣ Get vehicle daily price and availability
   const vehicleRes = await pool.query(
     `SELECT daily_rent_price FROM vehicles WHERE id = $1 AND availability_status = 'available'`,
     [vehicle_id]
@@ -20,7 +19,6 @@ const createBooking = async (payload: {
 
   const dailyPrice = vehicleRes.rows[0].daily_rent_price
 
-  // 2️⃣ Calculate total price using plain JS
   const startDate = new Date(rent_start_date)
   const endDate = new Date(rent_end_date)
   const timeDiff = endDate.getTime() - startDate.getTime()
@@ -34,7 +32,6 @@ const createBooking = async (payload: {
 
   const status = "active"
 
-  // 3️⃣ Insert booking and return booking with vehicle info
   const result = await pool.query(
     `WITH inserted_booking AS (
       INSERT INTO bookings (
@@ -59,7 +56,6 @@ const createBooking = async (payload: {
     [customer_id, vehicle_id, rent_start_date, rent_end_date, total_price, status]
   )
 
-  // 4️⃣ Update vehicle status to booked
   await pool.query(
     `UPDATE vehicles SET availability_status = 'booked' WHERE id = $1`,
     [vehicle_id]
@@ -67,8 +63,6 @@ const createBooking = async (payload: {
 
   return result
 }
-
-// Other methods can remain the same (getBookings, updateBookings, deleteBookings)
 
 const getBookings = async () => {
   const result = await pool.query(`SELECT 
